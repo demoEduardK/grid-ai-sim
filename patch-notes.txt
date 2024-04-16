@@ -1,0 +1,8 @@
+Initial Merge
+Create a portfolio project based on the files of my recent learning project.
+
+Add grid related functionality
+Add A* implementation for finding the next suitable position on the grid, when the pass is blocked by ally actors.
+Add a simple actor to represent changes on the grid.
+Add a bit of debugging methods for logging and visualization.
+Add a default GameMode that currently single handed controls the whole simulation process.
