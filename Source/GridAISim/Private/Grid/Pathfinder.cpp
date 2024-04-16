@@ -14,11 +14,11 @@ TRACE_DECLARE_INT_COUNTER(LessOpCount, TEXT("Less<> Operator() Uses"));
 
 static const int32 ConnectionCost = 1;
 
-bool Path::LessDistancePredicate::operator()(const FNodeRecord2& LeftRecord, const FNodeRecord2& RightRecord) const
+bool Path::LessDistancePredicate::operator()(const FNodeRecord& LeftRecord, const FNodeRecord& RightRecord) const
 {
 	TRACE_COUNTER_INCREMENT(LessOpCount);
 	UE_LOG(LogSim, Display, TEXT("LeftRecord: [%s]: Est.Cost: %s, Compare Weight: %s, IsVisited:%s, "
-		       "\nFNodeRecord2 RightRecord[%s]: Est.Cost: %s,Compare Weight: %s, IsVisited:%s"),
+		       "\nFNodeRecord RightRecord[%s]: Est.Cost: %s,Compare Weight: %s, IsVisited:%s"),
 	       *LeftRecord.Node.XY.ToString(), *FString::SanitizeFloat(LeftRecord.EstimatedTotalCost),
 	       *FString::SanitizeFloat(LeftRecord.EstimatedTotalCost * StaticCast<int32>(LeftRecord.VisitStatus)),
 	       *FString(LeftRecord.VisitStatus == Visited ? "Visited" : "NotVisited"),
@@ -89,12 +89,12 @@ TArray<Path::FNode> GS_Pathfinder::FindPath(const Path::FNode& InStartNode, cons
 	       *InEndNode.XY.ToString());
 	using namespace Path;
 
-	TArray<FNodeRecord2*> NodesArray;
+	TArray<FNodeRecord*> NodesArray;
 
 	TArray<Path::FNode> ResultNodes;
 
 	//Path::FNodeRecordPtr StartNodeRecord = MakeShared<Path::FNodeRecord>(StartNode);
-	FNodeRecord2* StartNodeRecord = new FNodeRecord2(InStartNode);
+	FNodeRecord* StartNodeRecord = new FNodeRecord(InStartNode);
 	StartNodeRecord->HeuristicValue = Path::FHeuristic::Estimate(InStartNode, InEndNode);
 	StartNodeRecord->CostSoFar = 0.f;
 	StartNodeRecord->VisitStatus = Discovered;
@@ -102,7 +102,7 @@ TArray<Path::FNode> GS_Pathfinder::FindPath(const Path::FNode& InStartNode, cons
 
 	NodesArray.HeapPush(StartNodeRecord, Path::LessDistancePredicate());
 
-	Path::FNodeRecord2* CurrentNodeRecord = nullptr;
+	Path::FNodeRecord* CurrentNodeRecord = nullptr;
 
 	while (NodesArray.Num() > 0)
 	{
@@ -147,11 +147,11 @@ TArray<Path::FNode> GS_Pathfinder::FindPath(const Path::FNode& InStartNode, cons
 			{
 				continue;
 			}
-			Path::FNodeRecord2 NextNodeRecord(NeighborNode);
+			Path::FNodeRecord NextNodeRecord(NeighborNode);
 			const float NextNodeCost = CurrentNodeRecord->CostSoFar + ConnectionCost;
 			float NextNodeHeuristicValeue = 0.f;
 
-			auto SearchPredicate = [&NextNodeRecord](const FNodeRecord2* NodeRecord)
+			auto SearchPredicate = [&NextNodeRecord](const FNodeRecord* NodeRecord)
 			{
 				return NextNodeRecord.Node == NodeRecord->Node;
 			};
@@ -187,7 +187,7 @@ TArray<Path::FNode> GS_Pathfinder::FindPath(const Path::FNode& InStartNode, cons
 			if (NextNodeRecord.VisitStatus == Unvisited)
 			{
 				NextNodeRecord.VisitStatus = Discovered;
-				NodesArray.HeapPush(new FNodeRecord2(NextNodeRecord), Path::LessDistancePredicate());
+				NodesArray.HeapPush(new FNodeRecord(NextNodeRecord), Path::LessDistancePredicate());
 			}
 		}
 		//CurrentNodeRecord->VisitStatus = Visited;
@@ -219,7 +219,7 @@ TArray<Path::FNode> GS_Pathfinder::FindPath(const Path::FNode& InStartNode, cons
 	}
 
 	// TODO: make sure, that 
-	NodesArray = TArray<FNodeRecord2*>();
+	NodesArray = TArray<FNodeRecord*>();
 	/*for (auto* entry : NodesArray)
 	{
 		delete entry;

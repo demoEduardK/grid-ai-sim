@@ -34,29 +34,6 @@ namespace Path
 		FNodeRecord* To = nullptr;
 	};
 
-	struct FNodeRecord
-	{
-		FNodeRecord()
-		{
-		};
-
-		FNodeRecord(const FNode& InNode)
-		{
-			Node = InNode;
-		}
-
-		FConnection ParentConnection;
-		float HeuristicValue = 0.f;
-		float CostSoFar = 0.f;
-		float EstimatedTotalCost = 0.f;
-		FNode Node;
-		TSharedRef<FNodeRecord> ParentNodeRef;
-		FNodeRecord* ParentNodePtr;
-	};
-
-	using FNodeRecordPtr = TSharedPtr<Path::FNodeRecord>;
-	typedef TUniquePtr<Path::FNodeRecord> FNodeRecordUPtr;
-
 	enum EVisitStatus
 	{
 		Unvisited = 0,
@@ -64,29 +41,28 @@ namespace Path
 		Visited = 2
 	};
 
-	struct GRIDAISIM_API FNodeRecord2
+	struct GRIDAISIM_API FNodeRecord
 	{
-		FNodeRecord2()
+		FNodeRecord()
 		{
 			VisitStatus = Unvisited;
 		};
 
-		FNodeRecord2(const FNode& InNode, EVisitStatus InVisitStatus = Unvisited)
+		FNodeRecord(const FNode& InNode, EVisitStatus InVisitStatus = Unvisited)
 		{
 			Node = InNode;
 			VisitStatus = InVisitStatus;
 		}
-		~FNodeRecord2()
+		~FNodeRecord()
 		{
 			UE_LOG(LogSim, Display, TEXT("Node Record for %s is deconstructed."), *Node.XY.ToString());
 		}
-
-		FConnection ParentConnection;
+		
 		float HeuristicValue = 0.f;
 		float CostSoFar = 0.f;
 		float EstimatedTotalCost = 0.f;
 		FNode Node;
-		FNodeRecord2* ParentNodePtr = nullptr;
+		FNodeRecord* ParentNodePtr = nullptr;
 		EVisitStatus VisitStatus;
 	};
 
@@ -118,22 +94,7 @@ namespace Path
 	*/
 	struct GRIDAISIM_API LessDistancePredicate
 	{
-		bool operator()(FNodeRecord LeftRecord, FNodeRecord RightRecord) const
-		{
-			return LeftRecord.EstimatedTotalCost < RightRecord.EstimatedTotalCost;
-		};
-
-		bool operator()(FNodeRecord* LeftRecord, FNodeRecord* RightRecord) const
-		{
-			return LeftRecord->EstimatedTotalCost < RightRecord->EstimatedTotalCost;
-		};
-
-		bool operator()(const FNodeRecord2& LeftRecord, const FNodeRecord2& RightRecord) const;
-
-		bool operator()(const FNodeRecordUPtr& LeftRecord, const FNodeRecordUPtr& RightRecord) const
-		{
-			return LeftRecord->EstimatedTotalCost < RightRecord->EstimatedTotalCost;
-		};
+		bool operator()(const FNodeRecord& LeftRecord, const FNodeRecord& RightRecord) const;
 	};
 
 	struct GRIDAISIM_API FGraph
