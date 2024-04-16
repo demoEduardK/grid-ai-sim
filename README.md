@@ -1,6 +1,9 @@
 # grid-ai-sim
 Demo project of a simple AI simulation on a grid.
 
+## Build requirements
+The project is configured for build with UE5.3.2
+
 ## Description
 The idea of the project is to generate and manage the grid, to simulate AI behavior on a grid, and to learn and show some bits of AI algorithms. The main focus is on the algorithms, not the work with the framework, so sometimes the usage of UE framework files may look misleading, bear with me (the project with the Lyra-ish usage of UE classes and tools may join the portfolio soon as well).
 
