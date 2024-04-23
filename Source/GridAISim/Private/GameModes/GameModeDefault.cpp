@@ -102,7 +102,7 @@ void AGS_GameModeDefault::SpawnActorAt(TSubclassOf<AGS_GameActorBase> InActorCla
 	SpawnTransform.SetLocation(GridToGlobal(GridPoint.GridCoords));
 
 	GridPoint.GameActor = SpawnedActor;
-	SpawnedActor->GridPointIndex = Grid.At(GridPoint.Index).Index;
+	SpawnedActor->SetGridPointIndex(Grid.At(GridPoint.Index).Index);
 	SpawnedActor->SetGridCoordinates(InGridPoint);
 
 	SpawnedActor->FinishSpawning(SpawnTransform);
@@ -127,16 +127,22 @@ void AGS_GameModeDefault::SpawnActors()
 	TArray<FGridPoint> SpawnLocations;
 	Grid.OnStartSpawningActors();
 	// Spawn actors
+
+	for(const auto ActorTypeClass : ActorClasses)
+	{
 	for (int32 Index = 0; Index < NumberOfActorsPerTeam * 2/*NumberOfTeams*/; ++Index)
 	{
 		// First create an actor and populate it with required gameplay information
 		AGS_GameActorBase* SpawnedActor = World->SpawnActorDeferred<AGS_GameActorBase>(
-			ActorClass,
+			ActorTypeClass,
 			FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 		SpawnedActor->SetTeam(Index % 2 ? ETeam::BlueTeam : ETeam::RedTeam);
-		SpawnedActor->SetAttackPower(FMath::RandRange(AttackPowerMin, AttackPowerMax));
-		SpawnedActor->SetHealthPoints(FMath::RandRange(HealthPointsMin, HealthPointsMax));
+
+		// Leave these settings here for the further ability to apply GameMode's modifications as well.
+		SpawnedActor->SetActionDuration(SimulationTimeStep_ms);
+		// TODO: Decide how the attribute initialization should look like. Should Gamemode decide the random fraction or just leave it to the actor?
+		SpawnedActor->InitAttributes(0.f, 0.f);
 
 		// Next, pass it to the Grid, or GridManager, or GridGenerator to register it on the grid
 		// if( bool bSuccessful = RegisterActor(SpawnedActor) )
@@ -151,7 +157,7 @@ void AGS_GameModeDefault::SpawnActors()
 		}
 		// Do Grid related stuff here.
 		GridPointRef.GameActor = SpawnedActor;
-		SpawnedActor->GridPointIndex = GridPointRef.Index;
+		SpawnedActor->SetGridPointIndex(GridPointRef.Index);
 		SpawnedActor->SetGridCoordinates(GridPointRef.GridCoords);
 
 
@@ -165,6 +171,8 @@ void AGS_GameModeDefault::SpawnActors()
 		++(ActorsNumPerTeam.FindOrAdd(SpawnedActor->GetTeam()));
 		GameActors.Add(SpawnedActor);
 	}
+		
+	} //~ for actor classes
 	Grid.OnFinishSpawningActors();
 }
 
@@ -221,6 +229,7 @@ void AGS_GameModeDefault::MakeSimulationTurn()
 		}
 		else
 		{
+			Actor->Halt();
 			UE_LOG(LogSim, Warning,
 			       TEXT("[MakeSimulationTurn] Failed to find the closest actor."));
 		}
@@ -230,7 +239,8 @@ void AGS_GameModeDefault::MakeSimulationTurn()
 	for (auto* Actor : KilledGameActors)
 	{
 		GameActors.Remove(Actor);
-		Actor->StartDestroy();
+		// TODO: Let the actor HandleZeroHealth as well as self-destroy
+		//Actor->StartDestroy();
 	}
 	KilledGameActors.Empty();
 
@@ -296,6 +306,7 @@ void AGS_GameModeDefault::ActorAttack(AGS_GameActorBase* InTargetActor, AGS_Game
 		return;
 	}
 	InTargetActor->SetHealthPoints(InTargetActor->GetHealthPoints() - InActionActor->GetAttackPower());
+	InActionActor->PlayAttack(InTargetActor);
 	if (InTargetActor->GetHealthPoints() <= 0.f)
 	{
 		HandleActorKilled(InTargetActor, InActionActor);
@@ -353,7 +364,7 @@ void AGS_GameModeDefault::ActorMoveTowards(AGS_GameActorBase* InTargetActor, AGS
 	//{
 	//	NextMove = (*DummyPath.begin()).XY;
 	//}
-	
+
 
 	if (NextMove == FIntPoint::ZeroValue)
 	{
@@ -368,8 +379,8 @@ void AGS_GameModeDefault::ActorMoveTowards(AGS_GameActorBase* InTargetActor, AGS
 
 
 	// TODO: fix the lerp first. Then delete the SetActorLocation call.
-	//InActionActor->MoveActorInterp(GridToGlobal(NextMove), SimulationTimeStep_ms);
-	InActionActor->SetActorLocation(GridToGlobal(NextMove));
+	InActionActor->MoveActorInterp(GridToGlobal(NextMove), SimulationTimeStep_ms);
+	//InActionActor->SetActorLocation(GridToGlobal(NextMove));
 }
 
 void AGS_GameModeDefault::HandleActorKilled(AGS_GameActorBase* InTargetActor, AGS_GameActorBase* InInstigatorActor)

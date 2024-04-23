@@ -8,6 +8,14 @@
 #include "Grid/Grid.h"
 #include "GameModeDefault.generated.h"
 
+USTRUCT(Blueprintable)
+struct GRIDAISIM_API FUnitsCountData
+{
+	GENERATED_BODY()
+	
+	TSubclassOf<class AGS_GameActorBase> UnitClass;
+	int32 UnitCount;
+};
 
 class AGS_GridTestActor;
 /**
@@ -51,6 +59,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
 	int32 NumberOfActorsPerTeam = 1;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
+	FUnitsCountData UnitsCountData;
+
 	// Generally, we don't need this variable, but for now I simply use it instead of magic numbers for spawning
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
 	int32 NumberOfTeams = 2;
@@ -59,6 +70,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
 	TSubclassOf<AGS_GameActorBase> ActorClass;
 
+	// The subclass to be used for the simulation. It's just a single class at the moment tho
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
+	TArray<TSubclassOf<AGS_GameActorBase>> ActorClasses;
+
+	/*
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
+	TArray<FUnitsCountData> ActorClasses;
+	 */
 	// The subclass to be used for the simulation. It's just a single class at the moment tho
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GameSettings")
 	TSubclassOf<AGS_GridTestActor> GridActorDummyClass;
